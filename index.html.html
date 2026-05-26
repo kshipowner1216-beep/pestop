@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>기후변화 대응 농작물 해충식별 챗봇</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", Arial, sans-serif;
+      background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+      color: #263238;
+    }
+
+    header {
+      background: #2e7d32;
+      color: white;
+      padding: 28px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 10px 0 0;
+      font-size: 15px;
+      opacity: 0.95;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px 40px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      color: #1b5e20;
+      font-size: 22px;
+    }
+
+    .upload-box {
+      border: 2px dashed #81c784;
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      background: #f9fff9;
+      margin-bottom: 16px;
+    }
+
+    .upload-box input {
+      margin-top: 12px;
+    }
+
+    #preview {
+      max-width: 100%;
+      max-height: 280px;
+      margin-top: 15px;
+      border-radius: 14px;
+      display: none;
+      border: 1px solid #c8e6c9;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    textarea,
+    select,
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cfd8dc;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    textarea:focus,
+    select:focus,
+    input[type="text"]:focus {
+      border-color: #43a047;
+      box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.15);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+
+    .primary-btn {
+      background: #2e7d32;
+      color: white;
+    }
+
+    .primary-btn:hover {
+      background: #1b5e20;
+    }
+
+    .secondary-btn {
+      background: #e8f5e9;
+      color: #1b5e20;
+    }
+
+    .secondary-btn:hover {
+      background: #c8e6c9;
+    }
+
+    .chat-box {
+      height: 530px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 14px;
+      background: #fafafa;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      line-height: 1.55;
+      max-width: 92%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      white-space: pre-wrap;
+    }
+
+    .bot {
+      background: #ffffff;
+      border: 1px solid #dcedc8;
+      margin-right: auto;
+    }
+
+    .user {
+      background: #dcedc8;
+      margin-left: auto;
+    }
+
+    .pest-card {
+      border: 1px solid #dcedc8;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 14px;
+    }
+
+    .pest-card h3 {
+      margin: 0 0 8px;
+      color: #1b5e20;
+    }
+
+    .tag-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+    }
+
+    .tag {
+      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      font-weight: 700;
+    }
+
+    .score {
+      font-weight: 800;
+      color: #ef6c00;
+    }
+
+    .small-note {
+      font-size: 13px;
+      color: #607d8b;
+      line-height: 1.5;
+    }
+
+    .quick-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .quick-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .quick-btn {
+      background: #f1f8e9;
+      color: #33691e;
+      border: 1px solid #c5e1a5;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .quick-btn:hover {
+      background: #dcedc8;
+    }
+
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .info-table th,
+    .info-table td {
+      border: 1px solid #dcedc8;
+      padding: 9px;
+      vertical-align: top;
+    }
+
+    .info-table th {
+      background: #f1f8e9;
+      color: #1b5e20;
+      width: 110px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 13px;
+      color: #607d8b;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>기후변화 대응 농작물 해충식별 챗봇</h1>
+    <p>해충 사진과 피해 증상을 입력하면 주요 해충 후보, 농작물 피해, 예찰 방법, 방제 방법을 안내합니다.</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>해충 사진 및 증상 입력</h2>
+
+      <div class="upload-box">
+        <strong>해충 사진 업로드</strong>
+        <p class="small-note">
+          현재 버전은 사진을 미리보기로 보여주고, 사용자가 입력한 특징과 피해 증상을 바탕으로 해충을 추천합니다.
+          실제 사진 자동 식별은 추후 AI 이미지 분류 모델을 연결하면 구현할 수 있습니다.
+        </p>
+        <input type="file" id="imageInput" accept="image/*">
+        <br>
+        <img id="preview" alt="업로드한 해충 사진 미리보기">
+      </div>
+
+      <div class="form-group">
+        <label for="symptomInput">관찰한 특징이나 피해 증상을 입력하세요</label>
+        <textarea id="symptomInput" placeholder="예: 잎 내부에 터널이 생기고 잎이 구불구불 말려요. 새순 피해가 심해요."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="cropSelect">피해 부위 또는 상황</label>
+        <select id="cropSelect">
+          <option value="">선택하지 않음</option>
+          <option value="잎 새순 어린잎">잎, 새순, 어린잎 피해</option>
+          <option value="과실 열매 상품성">과실, 열매 상품성 피해</option>
+          <option value="검은 곰팡이 흡즙">검은 곰팡이 또는 흡즙 피해</option>
+          <option value="구멍 천공 갉아먹음">잎에 구멍, 갉아먹은 흔적</option>
+          <option value="트랩 성충">트랩으로 성충 확인</option>
+        </select>
+      </div>
+
+      <div class="button-row">
+        <button class="primary-btn" id="analyzeBtn">해충 후보 분석하기</button>
+        <button class="secondary-btn" id="resetBtn">초기화</button>
+      </div>
+
+      <hr style="margin: 22px 0; border: none; border-top: 1px solid #e0e0e0;">
+
+      <h2>빠른 증상 선택</h2>
+
+      <div class="quick-list">
+        <button class="quick-btn" data-text="잎 뒷면에 작은 벌레가 있고 잎이 회녹색 또는 청동색으로 변하며 광합성이 떨어지는 것 같아요.">잎 변색·흡즙 피해</button>
+        <button class="quick-btn" data-text="새순이 뒤틀리고 잎이 오그라들며 과실에 코르크화와 긁힌 상처가 생겼어요.">새순 뒤틀림·과실 상처</button>
+        <button class="quick-btn" data-text="어린잎 안쪽에 터널이 생기고 잎이 구불구불 말렸어요.">잎 내부 터널·말림</button>
+        <button class="quick-btn" data-text="흡즙 피해가 있고 배설물 때문에 검은 곰팡이가 생겨 잎과 과실이 검게 오염되었어요.">검은 곰팡이·깍지벌레 의심</button>
+        <button class="quick-btn" data-text="잎에 작은 구멍이 많고 검은색에 주황색 세로띠가 있는 벌레가 톡톡 튀어요.">작은 구멍·톡톡 튀는 벌레</button>
+        <button class="quick-btn" data-text="유충이 잎을 심하게 갉아먹고 큰 구멍과 결각이 생겼어요. 속잎도 썩고 생장점이 손상된 것 같아요.">큰 구멍·폭식 피해</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>챗봇 응답</h2>
+
+      <div class="chat-box" id="chatBox"></div>
+
+      <div class="button-row">
+        <button class="secondary-btn" id="showAllBtn">전체 해충 정보 보기</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    본 챗봇은 제공된 해충 자료를 기반으로 한 교육용·보조 진단용 웹앱입니다. 실제 방제 시에는 지역 농업기술센터 또는 등록약제 정보를 함께 확인하세요.
+  </footer>
+
+  <script>
+    const pests = [
+      {
+        name: "귤응애",
+        type: "흡즙성 해충",
+        features: "알은 구형 홍색이며 암컷 성충은 약 0.45~0.56mm, 암선홍색이다. 수컷은 약 0.3~0.4mm이다. 연간 세대수가 많아 약제 저항성이 생기기 쉽다.",
+        damage: "잎 뒷면에서 흡즙하여 잎이 회녹색 또는 청동색으로 변한다. 광합성 저하, 조기낙엽, 잎 거칠어짐, 착색 불량, 상품성 하락이 발생한다.",
+        monitoring: "잎당 2~3마리 또는 약 75%의 잎에서 발견될 때 방제를 고려한다.",
+        control: "봄철 기계유유제 살포가 효과적이다. 4월 하순과 5월 중순에는 다른 약제와 혼용할 수 있다. 약제 저항성 방지를 위해 교차 살포가 필요하며, 천적 피해를 줄이기 위해 합성피레스로이드계는 가급적 피한다.",
+        keywords: ["귤응애", "응애", "잎 뒷면", "회녹색", "청동색", "광합성", "조기낙엽", "착색", "흡즙", "기계유", "작은 벌레"]
+      },
+      {
+        name: "볼록총채벌레",
+        type: "흡즙성 해충",
+        features: "성충은 약 1mm, 황색이며 날개가 검고 가위 모양으로 보인다. 유충은 옅은 황색이고 복부가 볼록하다.",
+        damage: "새순이 뒤틀리고 잎이 오그라든다. 과실에는 코르크화와 긁힌 상처가 생겨 상품 품질이 저하된다.",
+        monitoring: "황색 또는 청색 끈끈이트랩을 설치한다. 꽃봉오리와 잎 사이를 관찰하거나 흰 종이 위에 털어 확인한다.",
+        control: "발생 초기 방제가 중요하다. 친환경 유기농자재를 잎 앞뒷면에 충분히 살포하고, 계통이 다른 약제를 5~7일 간격으로 2~3회 교대 살포한다.",
+        keywords: ["볼록총채벌레", "총채벌레", "새순", "뒤틀림", "오그라", "코르크화", "긁힌 상처", "황색", "청색", "끈끈이", "트랩", "과실", "품질"]
+      },
+      {
+        name: "귤굴나방",
+        type: "잎을 파고드는 해충",
+        features: "번데기 또는 성충으로 월동한다. 암컷 1마리가 약 50개의 알을 낳으며, 유충이 잎 내부에 터널을 만들고 잎을 말아 번데기가 된다.",
+        damage: "유충이 잎 내부를 파고들어 터널을 만들고 잎이 구불구불 말린다. 잎 면적 감소, 새순 생장 저하, 병원균 침입에 의한 2차 피해가 생길 수 있다.",
+        monitoring: "어린잎과 새순에서 터널 흔적, 잎 말림 증상을 확인한다. 특히 여름순과 가을순을 집중 관찰한다.",
+        control: "여름순부터 방제한다. 새순이 동시에 발생하도록 관리하고, 등록약제를 1주일 간격으로 4회 살포한다. 교미교란제를 사용해 산란을 억제할 수 있다.",
+        keywords: ["귤굴나방", "굴나방", "터널", "잎 내부", "잎 말림", "구불구불", "새순", "어린잎", "여름순", "가을순", "교미교란"]
+      },
+      {
+        name: "이세리아깍지벌레",
+        type: "흡즙성 깍지벌레",
+        features: "암컷은 약 5mm, 적갈색이며 백색에서 황색의 왁스 물질로 덮여 있다. 알주머니에 600~1,000개의 알을 낳는다. 1령 약충은 밝은 적색이다.",
+        damage: "흡즙으로 나무 수세가 약해진다. 배설물로 인해 검은 곰팡이가 생기며 광합성이 저하되고 과실과 잎이 검게 오염되어 상품성이 크게 떨어진다.",
+        monitoring: "전년 발생 나무를 중심으로 5월 하순부터 1령 유충 발생 여부를 확인한다.",
+        control: "1~2령 유충 시기 방제가 핵심이다. 1령 유충 확인 후 5~6주 뒤 1차 살포하고, 2주 뒤 생존 개체를 확인해 2차 살포한다. 수관 전체에 약제가 충분히 묻도록 살포한다.",
+        keywords: ["이세리아", "깍지벌레", "알주머니", "왁스", "검은 곰팡이", "그을음", "수세", "흡즙", "과실 오염", "잎 오염", "1령", "약충"]
+      },
+      {
+        name: "화살깍지벌레",
+        type: "흡즙성 깍지벌레",
+        features: "암컷 깍지는 약 2.8~3.6mm, 암갈색이며 화살촉 모양이다. 수컷은 날파리형이고 1령 약충은 담황색이다.",
+        damage: "흡즙으로 잎이 황화되고 낙엽이 생기며 가지가 약해진다. 외관이 나빠져 상품성이 저하된다.",
+        monitoring: "가지와 잎에 붙은 깍지를 확인한다. 약충 발생 시기를 파악하는 것이 중요하다.",
+        control: "피해 가지는 전정하여 제거한다. 무당벌레류와 풀잠자리류 같은 천적을 활용할 수 있다. 유충기에 약제를 살포하고, 월동기 기계유 사용은 신중히 한다.",
+        keywords: ["화살깍지벌레", "화살", "깍지", "화살촉", "암갈색", "황화", "낙엽", "가지 약화", "전정", "무당벌레", "풀잠자리", "유충"]
+      },
+      {
+        name: "배추좀나방",
+        type: "잎을 갉아먹는 해충",
+        features: "유충은 다 자라면 약 10mm이다. 성충은 약 6mm이며 등에 유황백색 다이아몬드 무늬가 있다. 알은 황백색 납작한 형태로 약 0.5mm이다.",
+        damage: "유충이 잎을 갉아 구멍을 만들며 심하면 잎맥만 남는다. 어린 모종기에 피해를 받으면 정식 후 생육 지연과 결구 불량이 생긴다.",
+        monitoring: "피해 부위를 관찰한 뒤 유충을 직접 확인한다.",
+        control: "소규모에서는 직접 제거할 수 있다. 비티제와 고삼추출물 등 유기농자재를 활용할 수 있으며, 약제 저항성 방지를 위해 계통이 다른 약제를 교대 사용한다.",
+        keywords: ["배추좀나방", "배추", "좀나방", "다이아몬드", "잎맥", "구멍", "갉아", "모종", "결구", "비티", "고삼", "유충"]
+      },
+      {
+        name: "벼룩잎벌레",
+        type: "잎을 갉아먹는 해충",
+        features: "성충은 2~3mm 크기이며 검은색 몸에 날개 양쪽으로 주황색 세로띠가 있다. 유충은 유백색이고 다 자라면 약 8mm이다.",
+        damage: "성충이 잎 표면을 갉아 작은 구멍을 많이 만든다. 어린 개체는 광합성 면적이 급감해 생육이 멈추거나 고사할 수 있다.",
+        monitoring: "구멍 뚫린 어린잎 주변에서 톡톡 튀는 검은색 벌레와 주황색 줄무늬를 확인한다.",
+        control: "생육 초기 방제가 중요하다. 정식 후 방충망으로 물리적으로 차단하고, 필요 시 적용약제를 살포한다.",
+        keywords: ["벼룩잎벌레", "벼룩", "잎벌레", "톡톡", "튀는", "검은색", "주황색", "세로띠", "작은 구멍", "어린잎", "방충망", "정식"]
+      },
+      {
+        name: "파밤나방",
+        type: "잎을 갉아먹는 해충",
+        features: "성충 몸길이는 15~20mm, 날개 편 길이는 25~30mm이다. 앞날개는 황갈색이며 청백색 점이 있다. 유충은 황록색에서 흑갈색이고 약 35mm까지 자란다.",
+        damage: "유충이 잎을 폭식해 큰 결각과 구멍을 만든다. 속잎이 썩고 생장점이 손상되어 수량이 급감한다. 집단 발생 시 피해가 빠르게 커진다.",
+        monitoring: "페로몬트랩으로 성충 발생을 예찰한다.",
+        control: "1~2령 어린 유충 시기에 방제 효과가 높다. 농약 저항성에 주의하며 작용기작이 다른 약제를 교대 사용한다. 교미교란용 페로몬을 활용할 수 있다.",
+        keywords: ["파밤나방", "폭식", "큰 구멍", "결각", "천공", "속잎", "생장점", "수량", "페로몬", "트랩", "황록색", "흑갈색", "어린 유충"]
+      }
+    ];
+
+    const chatBox = document.getElementById("chatBox");
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const symptomInput = document.getElementById("symptomInput");
+    const cropSelect = document.getElementById("cropSelect");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const showAllBtn = document.getElementById("showAllBtn");
+    const quickButtons = document.querySelectorAll(".quick-btn");
+
+    function addMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = "message " + sender;
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function normalize(text) {
+      return text
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .replace(/[.,!?~]/g, "");
+    }
+
+    function scorePest(pest, inputText) {
+      const normalizedInput = normalize(inputText);
+      let score = 0;
+
+      pest.keywords.forEach(keyword => {
+        const normalizedKeyword = normalize(keyword);
+        if (normalizedInput.includes(normalizedKeyword)) {
+          score += 3;
+        }
+      });
+
+      const words = inputText.split(/[\s,./!?]+/).filter(Boolean);
+
+      words.forEach(word => {
+        const w = normalize(word);
+        if (w.length < 2) return;
+
+        pest.keywords.forEach(keyword => {
+          const k = normalize(keyword);
+          if (k.includes(w) || w.includes(k)) {
+            score += 1;
+          }
+        });
+      });
+
+      return score;
+    }
+
+    function analyzePests() {
+      const symptom = symptomInput.value.trim();
+      const selectedContext = cropSelect.value.trim();
+      const totalInput = symptom + " " + selectedContext;
+
+      if (!symptom && !selectedContext) {
+        addMessage("관찰한 특징이나 피해 증상을 입력해 주세요. 예: 잎 내부 터널, 검은 곰팡이, 새순 뒤틀림, 톡톡 튀는 벌레 등", "bot");
+        return;
+      }
+
+      addMessage(totalInput, "user");
+
+      const results = pests
+        .map(pest => ({
+          ...pest,
+          score: scorePest(pest, totalInput)
+        }))
+        .sort((a, b) => b.score - a.score);
+
+      const matched = results.filter(item => item.score > 0).slice(0, 3);
+
+      if (matched.length === 0) {
+        addMessage("입력한 증상과 정확히 일치하는 해충을 찾지 못했어요. 피해 부위, 벌레 색, 크기, 잎의 구멍·말림·변색 여부를 조금 더 자세히 입력해 주세요.", "bot");
+        return;
+      }
+
+      addMessage("입력한 증상을 기준으로 가장 가능성이 높은 해충 후보를 찾았어요.", "bot");
+
+      matched.forEach((pest, index) => {
+        renderPestCard(pest, index + 1);
+      });
+    }
+
+    function renderPestCard(pest, rank) {
+      const card = document.createElement("div");
+      card.className = "pest-card";
+
+      card.innerHTML = `
+        <h3>${rank}. ${pest.name} <span class="score">관련도 ${pest.score}점</span></h3>
+
+        <div class="tag-row">
+          <span class="tag">${pest.type}</span>
+        </div>
+
+        <table class="info-table">
+          <tr>
+            <th>주요 특징</th>
+            <td>${pest.features}</td>
+          </tr>
+          <tr>
+            <th>농작물 피해</th>
+            <td>${pest.damage}</td>
+          </tr>
+          <tr>
+            <th>예찰 방법</th>
+            <td>${pest.monitoring}</td>
+          </tr>
+          <tr>
+            <th>방제 방법</th>
+            <td>${pest.control}</td>
+          </tr>
+        </table>
+      `;
+
+      chatBox.appendChild(card);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function showAllPests() {
+      addMessage("등록된 전체 해충 8종 정보를 보여드릴게요.", "bot");
+
+      pests.forEach((pest, index) => {
+        renderPestCard({ ...pest, score: "-" }, index + 1);
+      });
+    }
+
+    function resetApp() {
+      symptomInput.value = "";
+      cropSelect.value = "";
+      imageInput.value = "";
+      preview.src = "";
+      preview.style.display = "none";
+      chatBox.innerHTML = "";
+      addInitialMessage();
+    }
+
+    function addInitialMessage() {
+      addMessage(
+        "안녕하세요. 저는 농작물 해충식별 챗봇입니다.\n\n해충 사진을 올리고, 관찰한 피해 증상이나 해충의 생김새를 입력해 주세요.\n\n예: 잎에 터널이 생겼어요 / 검은 곰팡이가 있어요 / 잎에 작은 구멍이 많고 벌레가 톡톡 튀어요",
+        "bot"
+      );
+    }
+
+    imageInput.addEventListener("change", function () {
+      const file = imageInput.files[0];
+
+      if (!file) {
+        preview.style.display = "none";
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.addEventListener("load", function () {
+        preview.src = reader.result;
+        preview.style.display = "inline-block";
+        addMessage("사진이 업로드되었습니다. 현재 버전에서는 사진과 함께 증상을 입력하면 더 정확한 후보를 추천할 수 있어요.", "bot");
+      });
+
+      reader.readAsDataURL(file);
+    });
+
+    analyzeBtn.addEventListener("click", analyzePests);
+
+    resetBtn.addEventListener("click", resetApp);
+
+    showAllBtn.addEventListener("click", showAllPests);
+
+    quickButtons.forEach(button => {
+      button.addEventListener("click", function () {
+        symptomInput.value = button.dataset.text;
+        addMessage("빠른 증상이 입력되었습니다. 이제 '해충 후보 분석하기' 버튼을 눌러 주세요.", "bot");
+      });
+    });
+
+    addInitialMessage();
+  </script>
+</body>
+</html>
